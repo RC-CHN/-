@@ -1,0 +1,286 @@
+///By 测控技术与仪器 潘若宸
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <iostream>
+#include <vector>
+#include <windows.h>
+#include <time.h>
+#include <fstream>
+#include <sstream>
+#include <string>
+using namespace std;
+class Account {
+private:
+	int id;
+	double balance;
+    Account* next;
+    string password;
+    int trigger;
+public:
+	Account(int _id) : id(_id), balance(0) { cout << id << " is constructed" << endl; }
+	~Account() { cout << id << " is destructed" << endl; }
+	int getId() const { return id; }
+	double getBalance() const { return balance; }
+	double plus(double d) { balance += d; }
+	void setBalance(double b) {this->balance=b;}
+    Account* getnext()
+    {
+      return this->next;
+        }
+        void* setnext(Account* x)
+        {
+            this->next=x;
+            }
+};
+
+class Bank
+{
+private:
+   Account* first;
+   int serial;
+   int seed;
+public:
+void Bank_destroy()   //删除链表
+{
+    Account *p=first;
+    first=first -> getnext();
+    free(p);
+    while(first){
+        p=first;
+        first=first->getnext();
+        free(p);
+    }
+}
+   Bank()
+       {
+           seed = (time(NULL)/100);
+       first = NULL;
+       serial=1;
+       cout << "Bank Constructed. " << endl;
+       }
+    ~Bank()
+    {
+        Bank_destroy();
+        cout << "Bank Deconstructed. " << endl;
+
+        }
+void *Account_delete(int idx)
+{
+
+    Account *q,*p;
+    q=p=first;
+    if (first==NULL)
+       return NULL;
+    if (first -> getId()  == idx)
+    {
+        p=first;
+        first = first -> getnext();
+        free (p);
+        return first;
+    }
+    for(q=first;q->getnext();q=q->getnext()){
+        p= q->getnext();
+        if (p->getId() == idx )
+        {
+            q->setnext(p->getnext());
+            free (p);
+            break;
+        }
+    }
+
+}
+ Account* Account_find(int idx)      //实现简单查找
+{
+    Account *p;
+    p=first;
+    if (first == NULL)
+    {
+        return NULL;
+    }
+    while(p){
+        if(p->getId() == idx)
+            return p;
+        p=p->getnext();
+    }
+    return NULL;
+}
+int  Account_create(){
+Account *p;Account *q;int temp;
+    p=first;
+    if (first == NULL)
+    {
+        p=new Account(serial+seed);
+        temp=(serial+seed);serial++;
+        p->setnext(NULL);
+        first = p;
+        return temp;
+    }
+    while(p){
+        if(p->getnext() == NULL)
+        { q=new Account(serial+seed);
+        temp=serial+seed;
+        serial++;
+        p->setnext(q);
+        q->setnext(NULL);
+        break;
+        }
+        p=p->getnext();
+    }
+    return temp;
+}
+int  Account_create(int tid,int tba ){
+Account *p;Account *q;int temp;
+    p=first;
+    if (first == NULL)
+    {
+        p=new Account(tid);
+        p->setnext(NULL);
+        p->setBalance(tba);
+        first = p;
+        return 0;
+    }
+    while(p){
+        if(p->getnext() == NULL)
+        { q=new Account(tid);
+        p->setnext(q);
+        q->setnext(NULL);
+        q->setBalance(tba);
+        break;
+        }
+        p=p->getnext();
+    }
+    return 0;
+}
+int bank_initialize()
+{
+    int temp_id,temp_balance;
+ifstream fin("data.txt", std::ios::in);
+char line[1024]={0};
+char x  [256];
+char y  [256];
+while(fin.getline(line, sizeof(line)))
+{
+stringstream word(line);
+word >> x;
+temp_id = atoi(x);
+word >> y;
+temp_balance = atoi(y);
+this->Account_create (temp_id,temp_balance);
+}
+fin.clear();
+fin.close();
+return 0;
+}
+void Temp_write(int tid,int tba)
+{
+ofstream   ofresult( "data.txt ",ios::app);
+ofresult  << tid <<" "<< tba <<endl;
+}
+void Data_reboot()
+{
+    Account *p = this->first;
+    this->first =first -> getnext();
+    this->Temp_write(p->getId(),p->getBalance());
+    while(first){
+        p=first;
+        first=first->getnext();
+        this->Temp_write(p->getId(),p->getBalance());
+    }
+}
+}
+
+;
+
+
+
+int main()
+{
+	Bank hape;
+    int flag;
+    int aid;
+    int num;
+    Account *temp;
+hape.bank_initialize();
+cout << "Initialized. "<<endl;
+
+	while (1>0)
+        {
+        cout << "Welcome to Hape Bank" << endl ;
+        cout << "Instructions: Input 1 to create an new account. "<< endl;
+        cout << "              Input 2 to query an account. "<< endl;
+        cout << "              Input 3 to delete an account "<< endl;
+        cout << "              Input 4 to exit system. "<< endl;
+        cin >> flag; cout << endl;
+        switch (flag){
+           case 1:
+           {
+             hape.Account_create();
+             Sleep(2000);
+             break;
+               }
+          case 2:
+          {
+              cout << "Account ID: ";
+              cin >>aid; cout << endl;
+              temp=hape.Account_find(aid);
+              if (temp==NULL)
+              {cout << "Account Not Found. ";
+                  }
+                  else
+                  {cout <<"Account Found. ";
+                  cout <<"Current Balance: " << temp->getBalance() << endl;
+
+                  cout <<"Input 1 to save money, 2 to withdraw money. " ;
+                  cin >> flag;
+                   switch (flag) {
+                       case 1:
+                       {cout <<"Amount of Money: ";cin >> num ;cout << endl;
+                       temp->plus(num);cout <<"Current Balance: "<< temp->getBalance() << endl;
+                       break;
+                           }
+                           case 2:
+                           {cout <<"Amount of Money: ";cin >> num ;cout << endl;
+                            temp->plus(-num);
+                            cout <<"Current Balance: "<< temp->getBalance() << endl;
+                            break;
+
+                               }
+                           default:
+                            {
+                                cout << "Input Error, return to main interface. ";
+                                break;
+                            }
+                       }
+                      }
+                      break;
+              }
+              case 3:
+              { cout << "Account ID: ";
+              cin >>aid; cout << endl;
+              temp=hape.Account_find(aid);
+              if (temp==NULL)
+              {cout << " Account Not found. ";break;}
+              hape.Account_delete(aid); cout<< "Deleted. "; break;
+               }
+               case 4:
+               {
+                   cout <<"Goodbye, sir. ";
+                   goto label;
+                   }
+               default :
+                {
+                    cout << "Input Error, return to main interface" << endl;
+                    break;
+                }
+
+            }
+
+	Sleep (1500);
+
+        system("cls");}
+ label:fstream file("data.txt", ios::out);
+ hape.Data_reboot();
+ return 0;
+}
